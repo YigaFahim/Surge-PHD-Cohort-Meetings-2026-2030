@@ -1,0 +1,603 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
+<title>Research Hub</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: sticky top bar with two tabs. A next-session panel leads. Timetable is an agenda list beside a month calendar that filters it. Library is a searchable list of past articles, each with its slides. */
+:root{
+  --bg:#F2F5F4; --surface:#FFFFFF; --surface-2:#E8EEEC; --fg:#13201D; --muted:#566762; --line:#D3DCD9;
+  --accent:#0B7285; --accent-text:#075566; --accent-soft:#D6EDF1; --accent-ink:#FFFFFF;
+  --warn:#8A5200; --warn-soft:#FBEBCB;
+  --good:#1B6F3B; --good-soft:#DAF0E1;
+  --danger:#B3261E; --danger-soft:#FADBD8;
+  --font-display:"Bricolage Grotesque","Segoe UI",system-ui,sans-serif;
+  --font-body:"IBM Plex Sans","Segoe UI",system-ui,sans-serif;
+  --font-mono:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;
+  --radius:10px;
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#0F1715; --surface:#16211E; --surface-2:#1F2D29; --fg:#E6EFEC; --muted:#9DB0AA; --line:#2B3A36;
+    --accent:#4FC3D3; --accent-text:#8BE0EC; --accent-soft:#14343A; --accent-ink:#06201F;
+    --warn:#F0B857; --warn-soft:#3A2C10;
+    --good:#6FD08C; --good-soft:#14301D;
+    --danger:#FF8A80; --danger-soft:#3C1B19;
+    color-scheme:dark;
+  }
+}
+
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--font-body);font-size:15px;line-height:1.5;padding-inline:16px;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+[hidden]{display:none!important}
+.wrap{max-width:1120px;margin-inline:auto;padding-bottom:56px}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+h1,h2,h3{font-family:var(--font-display);margin:0;text-wrap:balance;line-height:1.15}
+p{margin:0}
+a{color:var(--accent-text)}
+.mono{font-family:var(--font-mono);font-variant-numeric:tabular-nums}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+/* top bar */
+.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);display:flex;align-items:flex-end;flex-wrap:wrap;gap:0 28px;padding-top:14px;border-bottom:1px solid var(--line)}
+.brand{display:flex;flex-direction:column;padding-bottom:8px}
+.brand h1{font-size:22px;font-weight:700}
+.brand span{font:400 12px var(--font-mono);color:var(--muted);letter-spacing:.02em}
+.tabs{display:flex;gap:4px}
+.tab{border:0;background:none;padding:10px 14px;font:600 14px var(--font-body);color:var(--muted);border-bottom:2px solid transparent;margin-bottom:-1px;cursor:pointer}
+.tab:hover{color:var(--fg)}
+.tab[aria-selected="true"]{color:var(--fg);border-bottom-color:var(--accent)}
+.fresh{margin-left:auto;margin-bottom:8px;display:flex;align-items:center;gap:10px;font:400 12px var(--font-mono);color:var(--muted)}
+
+/* buttons, pills, chips */
+.btn{font:500 14px var(--font-body);border:1px solid var(--line);background:var(--surface);color:var(--fg);padding:8px 14px;border-radius:8px;cursor:pointer;text-decoration:none;display:inline-block;line-height:1.3}
+.btn:hover{background:var(--surface-2)}
+.btn.small{padding:4px 10px;font-size:13px}
+.btn[disabled]{opacity:.6;cursor:default}
+.pill{display:inline-block;padding:2px 9px;border-radius:999px;font:500 12px var(--font-body);white-space:nowrap}
+.pill.acc{background:var(--accent-soft);color:var(--accent-text)}
+.pill.warn{background:var(--warn-soft);color:var(--warn)}
+.pill.good{background:var(--good-soft);color:var(--good)}
+.pill.mute{background:var(--surface-2);color:var(--muted)}
+.pill.ex{border:1px dashed var(--muted);color:var(--muted);background:none}
+.chip{display:inline-block;background:var(--surface-2);color:var(--fg);padding:2px 8px;border-radius:6px;font-size:12px}
+
+.note{background:var(--accent-soft);color:var(--accent-text);border-radius:8px;padding:10px 14px;margin-top:16px;font-size:14px}
+.note.bad{background:var(--danger-soft);color:var(--danger)}
+
+/* next session */
+.hero{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:6px 24px;align-items:start;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:20px;margin-top:20px}
+.next-label{font:500 12px var(--font-mono);text-transform:uppercase;letter-spacing:.08em;color:var(--muted)}
+.next-title{font-size:clamp(1.4rem,1rem + 1.8vw,2rem);font-weight:700;margin-top:6px}
+.next-meta{display:flex;flex-wrap:wrap;gap:2px 18px;margin-top:8px;color:var(--muted)}
+.next-meta .mono{color:var(--fg)}
+.hero-side{grid-column:2;grid-row:1 / span 3;justify-self:end}
+.stats{grid-column:1 / -1;list-style:none;display:flex;flex-wrap:wrap;gap:6px 26px;margin:14px 0 0;padding:14px 0 0;border-top:1px solid var(--line);color:var(--muted);font-size:13px}
+.stats b{font:600 15px var(--font-mono);color:var(--fg);margin-right:6px}
+.hero-empty h2{font-size:22px;margin-top:6px}
+.hero-empty p{color:var(--muted);margin-top:6px}
+.loading{color:var(--muted);padding:8px 0}
+
+main{padding-top:26px}
+.cols{display:grid;grid-template-columns:minmax(0,1fr) 296px;gap:28px;align-items:start}
+.col-main{min-width:0}
+.filters{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:6px}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;background:var(--surface);overflow:hidden}
+.seg-btn{border:0;background:none;padding:7px 12px;font:500 13px var(--font-body);color:var(--muted);cursor:pointer}
+.seg-btn[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink)}
+select,input{font:inherit;font-size:16px;color:var(--fg);background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:7px 10px;min-width:0;max-width:100%}
+.search{flex:1 1 220px}
+.search input{width:100%}
+.chip-btn{border:1px solid var(--accent);background:var(--accent-soft);color:var(--accent-text);border-radius:999px;padding:4px 12px;font:500 13px var(--font-body);cursor:pointer}
+.count{font:400 12px var(--font-mono);color:var(--muted);margin:10px 0 0}
+
+/* timetable */
+.group-h{font:500 12px var(--font-mono);text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin:22px 0 8px}
+.list{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding-inline:16px}
+.row{display:grid;grid-template-columns:52px minmax(0,1fr) auto;gap:4px 16px;padding:14px 0;align-items:start}
+.row + .row,.entry + .entry{border-top:1px solid var(--line)}
+.dt{text-align:center;font-family:var(--font-mono);line-height:1.2}
+.dt .dow,.dt .mon{display:block;font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+.dt .dnum{display:block;font:700 26px var(--font-display);margin:2px 0}
+.title{font-weight:600;font-size:16px;overflow-wrap:anywhere}
+.row.past .title{color:var(--muted)}
+.meta{display:flex;flex-wrap:wrap;gap:2px 14px;color:var(--muted);font-size:14px;margin-top:2px}
+.meta .mono{color:var(--fg);font-size:13px}
+.sub{color:var(--muted);font-size:14px;margin-top:6px;overflow-wrap:anywhere}
+.sub b{font-weight:600;color:var(--fg)}
+.tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.side{display:flex;flex-direction:column;align-items:flex-end;gap:8px}
+
+/* calendar */
+.col-side{min-width:0}
+.cal{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:14px}
+.cal-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+.cal-title{font:700 16px var(--font-display)}
+.cal-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:2px}
+.cal-dow{font:500 11px var(--font-mono);color:var(--muted);text-align:center;padding:4px 0}
+.cal-day{aspect-ratio:1;min-width:0;border:0;background:none;border-radius:8px;font:500 13px var(--font-mono);color:var(--fg);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;cursor:pointer;padding:0}
+.cal-day:hover{background:var(--surface-2)}
+.cal-day.today{box-shadow:inset 0 0 0 1px var(--accent)}
+.cal-day.sel{background:var(--accent);color:var(--accent-ink)}
+.cal-day i{width:5px;height:5px;border-radius:50%;background:var(--accent)}
+.cal-day i.past{background:var(--muted)}
+.cal-day i.none{visibility:hidden}
+.cal-day.sel i{background:var(--accent-ink)}
+.cal-blank{aspect-ratio:1}
+.cal-foot{font-size:12px;color:var(--muted);margin-top:10px}
+
+/* library */
+.entry{display:grid;grid-template-columns:minmax(0,1fr) 250px;gap:8px 28px;padding:16px 0}
+.entry h3{font-size:17px;font-weight:700;overflow-wrap:anywhere}
+.entry h3 a{color:var(--fg);text-decoration-color:var(--accent);text-underline-offset:3px}
+.by{font-size:14px;color:var(--muted);margin-top:4px;overflow-wrap:anywhere}
+.em{display:flex;flex-direction:column;gap:8px;align-items:flex-start;min-width:0}
+.em .when{font:400 12px var(--font-mono);color:var(--muted)}
+.em .when b{font-weight:500;color:var(--fg)}
+.slides{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+
+.empty{border:1px dashed var(--line);border-radius:var(--radius);padding:32px 20px;text-align:center;color:var(--muted);margin-top:12px}
+.empty h3{color:var(--fg);font-size:18px;margin-bottom:6px}
+.empty .btn{margin-top:14px}
+
+/* slide preview */
+.overlay{position:fixed;inset:0;z-index:20;background:rgba(8,16,14,.7);display:flex;justify-content:center;align-items:center;padding:16px}
+.viewer{background:var(--surface);color:var(--fg);border:1px solid var(--line);border-radius:12px;width:100%;max-width:960px;height:min(86vh,720px);display:flex;flex-direction:column;overflow:hidden}
+.viewer-head{display:flex;align-items:center;gap:10px;padding:10px 14px;border-bottom:1px solid var(--line)}
+.viewer-head h2{font-size:16px;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.viewer iframe{flex:1;border:0;width:100%;background:var(--surface-2)}
+
+@media (max-width:860px){
+  .cols{grid-template-columns:minmax(0,1fr)}
+  .col-side{order:-1}
+}
+@media (max-width:640px){
+  .hero{grid-template-columns:minmax(0,1fr)}
+  .hero-side{grid-column:1;grid-row:auto;justify-self:start}
+  .row{grid-template-columns:44px minmax(0,1fr)}
+  .row .side{grid-column:2;flex-direction:row;align-items:center;justify-content:flex-start}
+  .entry{grid-template-columns:minmax(0,1fr)}
+  .fresh{margin-left:0}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div class="brand"><h1>Research Hub</h1><span>Timetable and presentation archive</span></div>
+    <nav class="tabs" role="tablist" aria-label="Sections">
+      <button class="tab" role="tab" id="tab-timetable" aria-controls="panel-timetable" aria-selected="true" data-act="tab" data-tab="timetable">Timetable</button>
+      <button class="tab" role="tab" id="tab-library" aria-controls="panel-library" aria-selected="false" data-act="tab" data-tab="library">Library</button>
+    </nav>
+    <div class="fresh"><span id="updated"></span><button class="btn small" id="refreshBtn" data-act="refresh">Refresh</button></div>
+  </header>
+
+  <div class="note" id="notice" hidden></div>
+  <section class="hero" id="hero" aria-live="polite"><div class="loading">Loading the timetable…</div></section>
+
+  <main>
+    <section id="panel-timetable" role="tabpanel" aria-labelledby="tab-timetable">
+      <div class="cols">
+        <div class="col-main">
+          <div class="filters">
+            <div class="seg" role="group" aria-label="Show sessions">
+              <button class="seg-btn" data-act="when" data-when="upcoming" aria-pressed="true">Upcoming</button>
+              <button class="seg-btn" data-act="when" data-when="past" aria-pressed="false">Past</button>
+              <button class="seg-btn" data-act="when" data-when="all" aria-pressed="false">All</button>
+            </div>
+            <select id="fPresenter" aria-label="Filter by presenter"><option value="">All presenters</option></select>
+            <select id="fType" aria-label="Filter by session type"><option value="">All types</option></select>
+            <button class="chip-btn" id="dayChip" data-act="clear-day" hidden></button>
+          </div>
+          <div id="sessionList"></div>
+        </div>
+        <aside class="col-side"><div class="cal" id="cal"></div></aside>
+      </div>
+    </section>
+
+    <section id="panel-library" role="tabpanel" aria-labelledby="tab-library" hidden>
+      <div class="filters">
+        <label class="search"><span class="sr">Search the library</span><input id="lQ" type="search" placeholder="Search articles" autocomplete="off"></label>
+        <select id="lYear" aria-label="Filter by year presented"><option value="">Any year</option></select>
+        <select id="lPresenter" aria-label="Filter by presenter"><option value="">All presenters</option></select>
+        <select id="lTag" aria-label="Filter by tag"><option value="">All tags</option></select>
+      </div>
+      <p class="count" id="libCount"></p>
+      <div id="libList"></div>
+    </section>
+  </main>
+</div>
+
+<div class="overlay" id="overlay" hidden>
+  <div class="viewer" role="dialog" aria-modal="true" aria-labelledby="viewerTitle">
+    <div class="viewer-head">
+      <h2 id="viewerTitle">Slides</h2>
+      <a class="btn small" id="viewerOpen" href="#" target="_blank" rel="noopener noreferrer">Open in new tab</a>
+      <button class="btn small" data-act="close-viewer">Close</button>
+    </div>
+    <iframe id="viewerFrame" title="Slide preview" allow="fullscreen" referrerpolicy="no-referrer"></iframe>
+  </div>
+</div>
+
+<script>
+/* ============================================================
+   SETUP: paste your two Google Sheet links here.
+   In Google Sheets: File > Share > Publish to web > pick one tab > CSV > Publish.
+   Copy the link it gives you. Do this once for the Timetable tab and once for the Library tab.
+   Leave both empty to see example data.
+   ============================================================ */
+var CONFIG = {
+  timetableCsv: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vR4xXLFrRXrfwpAwi3CC4zPVThyKXnBE371M6hABY1LqzksvXHA_9wpanIa3DMTmK1f2ZskaAbDdE09/pub?gid=1810180671&single=true&output=csv',
+  libraryCsv: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSHuy5r-joP0QTCnsTQebUlsfbP2RsQDGVcwxC-7bArD80fmPosCso2h3vEwkT79rtNjwSWWIZIE0_4/pub?gid=1811426031&single=true&output=csv',
+  refreshMinutes: 5
+};
+</script>
+
+<script>
+(function(){
+'use strict';
+var $=function(s,r){return (r||document).querySelector(s)};
+var $$=function(s,r){return Array.prototype.slice.call((r||document).querySelectorAll(s))};
+function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
+function safeUrl(u){try{var x=new URL(String(u||'').trim());return (x.protocol==='https:'||x.protocol==='http:')?x.href:''}catch(e){return ''}}
+function pad(n){return String(n).padStart(2,'0')}
+function ymd(d){return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate())}
+function parseYmd(s){var m=/^(\d{4})-(\d{2})-(\d{2})$/.exec(String(s||''));if(!m)return null;var d=new Date(+m[1],+m[2]-1,+m[3]);return d.getMonth()===+m[2]-1?d:null}
+var MON=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+var MONTHS=['January','February','March','April','May','June','July','August','September','October','November','December'];
+var DOW=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+
+var NOW=new Date(), TODAY=ymd(NOW), NOWHM=pad(NOW.getHours())+':'+pad(NOW.getMinutes());
+function addDays(n){var d=new Date();d.setDate(d.getDate()+n);return ymd(d)}
+
+/* ---------- example data (shown only when no sheet is connected) ---------- */
+var EX_SESSIONS=[
+  {id:'x1',date:addDays(2),start:'14:00',end:'15:00',title:'Journal club: article discussion',presenter:'Presenter A',type:'Journal club',location:'Seminar room',article:'Title of the article being discussed',notes:'Read the methods section before the session.'},
+  {id:'x2',date:addDays(9),start:'10:00',end:'11:00',title:'Progress update on data collection',presenter:'Presenter B',type:'Research update',location:'Online (meeting link)',notes:''},
+  {id:'x3',date:addDays(16),start:'14:00',end:'15:30',title:'Practice talk for the regional conference',presenter:'Presenter C',type:'Practice talk',location:'Seminar room',notes:'Bring written feedback.'},
+  {id:'x4',date:addDays(23),start:'15:00',end:'16:00',title:'Guest seminar',presenter:'Presenter A',type:'Seminar',location:'Main hall',notes:''},
+  {id:'x5',date:addDays(-5),start:'14:00',end:'15:00',title:'Journal club: article discussion',presenter:'Presenter B',type:'Journal club',location:'Seminar room',article:'Example article on household savings',notes:''},
+  {id:'x6',date:addDays(-12),start:'10:00',end:'11:00',title:'Proposal feedback session',presenter:'Presenter C',type:'Research update',location:'Online (meeting link)',notes:''},
+  {id:'x7',date:addDays(-19),start:'14:00',end:'15:00',title:'Journal club: article discussion',presenter:'Presenter A',type:'Journal club',location:'Seminar room',article:'Example article on clinic attendance',notes:''},
+  {id:'x8',date:addDays(-33),start:'14:00',end:'15:00',title:'Journal club: article discussion',presenter:'Presenter C',type:'Journal club',location:'Seminar room',article:'Example article on school readiness',notes:''}
+];
+var EX_LIBRARY=[
+  {id:'y1',title:'Mobile money use and household savings: a cross-sectional study',authors:'Author et al.',venue:'Journal name',year:'2025',url:'',presenter:'Presenter B',presentedOn:addDays(-5),tags:['economics','survey methods'],notes:'Example entry. Discussed sampling and the savings measure.',slidesUrl:'https://example.com/'},
+  {id:'y2',title:'Predictors of clinic attendance in rural health centres',authors:'Author et al.',venue:'Journal name',year:'2024',url:'',presenter:'Presenter A',presentedOn:addDays(-19),tags:['public health'],notes:'Example entry.',slidesUrl:'https://example.com/'},
+  {id:'y3',title:'School readiness and early literacy: a review',authors:'Author et al.',venue:'Journal name',year:'2023',url:'',presenter:'Presenter C',presentedOn:addDays(-33),tags:['education','review'],notes:'Example entry. No slides were attached.',slidesUrl:''},
+  {id:'y4',title:'Mixed methods in community research',authors:'Author et al.',venue:'Journal name',year:'2022',url:'',presenter:'Presenter A',presentedOn:addDays(-61),tags:['survey methods','review'],notes:'Example entry.',slidesUrl:''}
+];
+EX_SESSIONS.forEach(function(s){s.ex=true});
+EX_LIBRARY.forEach(function(a){a.ex=true});
+
+/* ---------- reading the Google Sheet ---------- */
+function parseCSV(text){
+  var rows=[],row=[],cur='',q=false,i=0;
+  text=String(text||'').replace(/^﻿/,'');
+  for(;i<text.length;i++){
+    var c=text[i];
+    if(q){
+      if(c==='"'){if(text[i+1]==='"'){cur+='"';i++}else q=false}
+      else cur+=c;
+    }else if(c==='"')q=true;
+    else if(c===','){row.push(cur);cur=''}
+    else if(c==='\n'||c==='\r'){
+      if(c==='\r'&&text[i+1]==='\n')i++;
+      row.push(cur);cur='';rows.push(row);row=[];
+    }else cur+=c;
+  }
+  if(cur!==''||row.length){row.push(cur);rows.push(row)}
+  return rows;
+}
+function toObjects(rows){
+  if(!rows.length)return [];
+  var head=rows[0].map(function(h){return String(h).trim().toLowerCase().replace(/[^a-z0-9]+/g,'_').replace(/^_|_$/g,'')});
+  return rows.slice(1).filter(function(r){return r.some(function(c){return String(c).trim()!==''})}).map(function(r){
+    var o={};head.forEach(function(h,i){if(h)o[h]=String(r[i]==null?'':r[i]).trim()});return o;
+  });
+}
+function normDate(s){
+  s=String(s||'').trim();if(!s)return '';
+  var m=/^(\d{4})-(\d{1,2})-(\d{1,2})/.exec(s);
+  if(m)return m[1]+'-'+pad(+m[2])+'-'+pad(+m[3]);
+  m=/^(\d{1,2})[\/.\-](\d{1,2})[\/.\-](\d{4})$/.exec(s);
+  if(m)return m[3]+'-'+pad(+m[2])+'-'+pad(+m[1]); /* day/month/year */
+  var t=new Date(s);
+  return isNaN(t)?'':ymd(t);
+}
+function normTime(s){
+  s=String(s||'').trim();if(!s)return '';
+  var m=/^(\d{1,2}):(\d{2})(?::\d{2})?\s*([AaPp][Mm])?$/.exec(s);
+  if(!m)return '';
+  var h=+m[1];
+  if(m[3]){var pm=/p/i.test(m[3]);if(pm&&h<12)h+=12;if(!pm&&h===12)h=0}
+  return h>23?'':pad(h)+':'+m[2];
+}
+function mapSession(o,i){
+  return {id:'s'+i,date:normDate(o.date),start:normTime(o.start||o.start_time),end:normTime(o.end||o.end_time),title:o.title||o.session||'',presenter:o.presenter||'',type:o.type||'',location:o.location||o.room||'',article:o.article||'',notes:o.notes||''};
+}
+function mapArticle(o,i){
+  return {id:'a'+i,title:o.title||o.article||'',authors:o.authors||'',venue:o.venue||o.journal||'',year:(o.year||'').slice(0,4),url:o.url||o.article_link||'',presenter:o.presenter||o.presented_by||'',
+    presentedOn:normDate(o.presented_on||o.date),tags:String(o.tags||'').split(/[,;]/).map(function(t){return t.trim()}).filter(Boolean),notes:o.notes||'',slidesUrl:o.slides_url||o.slides||''};
+}
+async function fetchCsv(url){
+  var r=await fetch(url,{cache:'no-store'});
+  if(!r.ok)throw new Error('http '+r.status);
+  var t=await r.text();
+  if(/^\s*<(!doctype|html)/i.test(t))throw new Error('not csv');
+  return toObjects(parseCSV(t));
+}
+
+/* ---------- state ---------- */
+var S={tab:'timetable',when:'upcoming',day:null,cal:new Date(NOW.getFullYear(),NOW.getMonth(),1),
+  mode:'loading',sessions:[],library:[],err:false,updatedAt:null,busy:false,lastFocus:null};
+try{var t0=localStorage.getItem('rh-tab');if(t0==='library'||t0==='timetable')S.tab=t0}catch(e){}
+if(location.hash==='#library')S.tab='library';
+if(location.hash==='#timetable')S.tab='timetable';
+
+function sessions(){var a=S.mode==='examples'?EX_SESSIONS:S.sessions;return a.filter(function(s){return parseYmd(s.date)&&s.title})}
+function articles(){var a=S.mode==='examples'?EX_LIBRARY:S.library;return a.filter(function(x){return x.title})}
+function status(s){
+  if(s.date<TODAY)return 'past';
+  if(s.date>TODAY)return 'upcoming';
+  var end=s.end||s.start||'23:59';
+  return end<NOWHM?'past':'today';
+}
+function cmpAsc(a,b){return (a.date+(a.start||'')).localeCompare(b.date+(b.start||''))}
+function cmpDesc(a,b){return cmpAsc(b,a)}
+function daysUntil(dateStr){return Math.round((parseYmd(dateStr)-parseYmd(TODAY))/86400000)}
+function countdown(s){var n=daysUntil(s.date);return n<=0?'Today':n===1?'Tomorrow':'In '+n+' days'}
+function longDate(s){var d=parseYmd(s);return d?d.toLocaleDateString(undefined,{weekday:'short',day:'numeric',month:'short',year:'numeric'}):''}
+function shortDate(s){var d=parseYmd(s);return d?d.toLocaleDateString(undefined,{day:'numeric',month:'short',year:'numeric'}):''}
+function timeRange(s){return s.start?(s.end?s.start+'–'+s.end:s.start):'Time to be set'}
+function uniq(arr){return arr.filter(function(v,i){return v&&arr.indexOf(v)===i})}
+function placeHtml(loc){var u=safeUrl(loc);return u?'<a href="'+esc(u)+'" target="_blank" rel="noopener noreferrer">Join online</a>':esc(loc)}
+function previewUrl(u){
+  u=safeUrl(u);if(!u)return '';
+  var m=/^https:\/\/drive\.google\.com\/file\/d\/([\w-]+)/.exec(u);
+  if(m)return 'https://drive.google.com/file/d/'+m[1]+'/preview';
+  m=/^https:\/\/docs\.google\.com\/presentation\/d\/([\w-]+)/.exec(u);
+  if(m)return 'https://docs.google.com/presentation/d/'+m[1]+'/embed?start=false&loop=false';
+  return '';
+}
+
+/* ---------- render ---------- */
+function renderNotice(){
+  var n=$('#notice'),msg='',bad=false;
+  if(S.err){msg='Could not load the Google Sheet. Check that each tab is published to the web as CSV, then press Refresh.';bad=true}
+  else if(S.mode==='examples')msg='These are example entries. Add your two published Google Sheet links in the setup block of this page to show your own timetable and library.';
+  n.textContent=msg;n.hidden=!msg;n.classList.toggle('bad',bad);
+}
+function renderUpdated(){
+  var u=$('#updated');
+  u.textContent=S.updatedAt?'Updated '+pad(S.updatedAt.getHours())+':'+pad(S.updatedAt.getMinutes()):'';
+  var b=$('#refreshBtn');b.disabled=S.busy;b.textContent=S.busy?'Refreshing…':'Refresh';
+  b.hidden=S.mode==='examples';
+  if(S.mode==='examples')u.textContent='';
+}
+function renderHero(){
+  var el=$('#hero');
+  if(S.mode==='loading'){el.innerHTML='<div class="loading">Loading the timetable…</div>';return}
+  var ss=sessions(),arts=articles();
+  var up=ss.filter(function(s){return status(s)!=='past'}).sort(cmpAsc),n=up[0];
+  var withSlides=arts.filter(function(a){return safeUrl(a.slidesUrl)}).length;
+  var stats='<ul class="stats"><li><b>'+ss.length+'</b>sessions on the timetable</li><li><b>'+arts.length+'</b>articles presented</li><li><b>'+withSlides+'</b>with slides attached</li></ul>';
+  if(!n){
+    el.innerHTML='<div class="hero-empty"><div class="next-label">Next session</div><h2>No upcoming sessions</h2><p>Nothing is scheduled yet.</p></div>'+stats;
+    return;
+  }
+  var st=status(n);
+  var pill=st==='today'?'<span class="pill warn">Today</span>':'<span class="pill acc">'+esc(countdown(n))+'</span>';
+  var meta='<span class="mono">'+esc(longDate(n.date))+' · '+esc(timeRange(n))+'</span>';
+  if(n.presenter)meta+='<span>'+esc(n.presenter)+'</span>';
+  if(n.location)meta+='<span>'+placeHtml(n.location)+'</span>';
+  el.innerHTML='<div><div class="next-label">Next session'+(n.ex?' · example':'')+'</div><h2 class="next-title">'+esc(n.title)+'</h2><div class="next-meta">'+meta+'</div></div><div class="hero-side">'+pill+'</div>'+stats;
+}
+function fillSelect(sel,first,values){
+  var cur=sel.value;
+  sel.innerHTML='<option value="">'+esc(first)+'</option>'+values.map(function(v){return '<option value="'+esc(v)+'">'+esc(v)+'</option>'}).join('');
+  sel.value=values.indexOf(cur)>-1?cur:'';
+}
+function fillFilters(){
+  var ss=sessions(),arts=articles();
+  fillSelect($('#fPresenter'),'All presenters',uniq(ss.map(function(s){return s.presenter})).sort());
+  fillSelect($('#fType'),'All types',uniq(ss.map(function(s){return s.type})).sort());
+  fillSelect($('#lYear'),'Any year',uniq(arts.map(function(a){return (a.presentedOn||'').slice(0,4)})).sort().reverse());
+  fillSelect($('#lPresenter'),'All presenters',uniq(arts.map(function(a){return a.presenter})).sort());
+  fillSelect($('#lTag'),'All tags',uniq([].concat.apply([],arts.map(function(a){return a.tags||[]}))).sort());
+}
+function sessionRow(s){
+  var d=parseYmd(s.date),st=status(s);
+  var pill=st==='today'?'<span class="pill warn">Today</span>':st==='upcoming'?'<span class="pill acc">'+esc(countdown(s))+'</span>':'<span class="pill mute">Done</span>';
+  var meta='<span class="mono">'+esc(timeRange(s))+'</span>';
+  if(s.presenter)meta+='<span>'+esc(s.presenter)+'</span>';
+  if(s.location)meta+='<span>'+placeHtml(s.location)+'</span>';
+  var tags='';
+  if(s.type)tags+='<span class="chip">'+esc(s.type)+'</span>';
+  if(s.ex)tags+='<span class="pill ex">Example</span>';
+  var sub='';
+  if(s.article)sub+='<div class="sub"><b>Article:</b> '+esc(s.article)+'</div>';
+  if(s.notes)sub+='<div class="sub">'+esc(s.notes)+'</div>';
+  return '<div class="row '+st+'"><div class="dt"><span class="dow">'+DOW[d.getDay()]+'</span><span class="dnum">'+d.getDate()+'</span><span class="mon">'+MON[d.getMonth()]+'</span></div>'+
+    '<div><div class="title">'+esc(s.title)+'</div><div class="meta">'+meta+'</div>'+sub+(tags?'<div class="tags">'+tags+'</div>':'')+'</div>'+
+    '<div class="side">'+pill+'</div></div>';
+}
+function renderTimetable(){
+  var box=$('#sessionList');
+  if(S.mode==='loading'){box.innerHTML='<div class="loading">Loading…</div>';return}
+  var all=sessions(),p=$('#fPresenter').value,t=$('#fType').value;
+  var list=all.filter(function(s){
+    var st=status(s);
+    if(S.day)return s.date===S.day;
+    if(S.when==='upcoming'&&st==='past')return false;
+    if(S.when==='past'&&st!=='past')return false;
+    return true;
+  }).filter(function(s){return !p||s.presenter===p}).filter(function(s){return !t||s.type===t});
+  var chip=$('#dayChip');
+  if(S.day){chip.hidden=false;chip.textContent='Showing '+shortDate(S.day)+' · clear'}else chip.hidden=true;
+  $$('.seg-btn').forEach(function(b){b.setAttribute('aria-pressed',String(!S.day&&b.getAttribute('data-when')===S.when))});
+  if(!list.length){
+    if(!all.length)box.innerHTML='<div class="empty"><h3>No sessions yet</h3><p>The timetable tab of the sheet has no rows with a date and title.</p></div>';
+    else box.innerHTML='<div class="empty"><h3>No sessions match</h3><p>Try a different filter, or show all sessions.</p><button class="btn" data-act="reset-filters">Show all sessions</button></div>';
+    return;
+  }
+  list.sort(S.when==='past'&&!S.day?cmpDesc:cmpAsc);
+  var html='',cur='',open=false;
+  list.forEach(function(s){
+    var key=s.date.slice(0,7);
+    if(key!==cur){
+      if(open)html+='</div>';
+      var d=parseYmd(s.date);
+      html+='<h3 class="group-h">'+MONTHS[d.getMonth()]+' '+d.getFullYear()+'</h3><div class="list">';
+      cur=key;open=true;
+    }
+    html+=sessionRow(s);
+  });
+  if(open)html+='</div>';
+  box.innerHTML=html;
+}
+function renderCalendar(){
+  var el=$('#cal');
+  var y=S.cal.getFullYear(),m=S.cal.getMonth();
+  var first=new Date(y,m,1),off=(first.getDay()+6)%7,dim=new Date(y,m+1,0).getDate();
+  var by={};
+  if(S.mode!=='loading')sessions().forEach(function(s){(by[s.date]=by[s.date]||[]).push(s)});
+  var html='<div class="cal-head"><button class="btn small" data-act="cal-prev" aria-label="Previous month">‹</button><div class="cal-title">'+MONTHS[m]+' '+y+'</div><button class="btn small" data-act="cal-next" aria-label="Next month">›</button></div><div class="cal-grid">';
+  ['Mo','Tu','We','Th','Fr','Sa','Su'].forEach(function(d){html+='<div class="cal-dow">'+d+'</div>'});
+  for(var i=0;i<off;i++)html+='<div class="cal-blank"></div>';
+  for(var d=1;d<=dim;d++){
+    var key=y+'-'+pad(m+1)+'-'+pad(d),ev=by[key]||[];
+    var cls='cal-day'+(key===TODAY?' today':'')+(key===S.day?' sel':'');
+    var anyUp=ev.some(function(s){return status(s)!=='past'});
+    var label=d+' '+MONTHS[m]+(ev.length?', '+ev.length+(ev.length>1?' sessions':' session'):'');
+    html+='<button class="'+cls+'" data-act="day" data-day="'+key+'" aria-label="'+esc(label)+'" aria-pressed="'+(key===S.day)+'">'+d+'<i class="'+(ev.length?(anyUp?'':'past'):'none')+'"></i></button>';
+  }
+  html+='</div><div class="cal-foot">Select a day to see its sessions.</div>';
+  el.innerHTML=html;
+}
+function entryRow(a){
+  var link=safeUrl(a.url);
+  var title=link?'<a href="'+esc(link)+'" target="_blank" rel="noopener noreferrer">'+esc(a.title)+'</a>':esc(a.title);
+  var by=[a.authors,[a.venue,a.year].filter(Boolean).join(' ')].filter(Boolean).join(' · ');
+  var tags=(a.tags||[]).map(function(t){return '<span class="chip">'+esc(t)+'</span>'}).join('');
+  if(a.ex)tags+='<span class="pill ex">Example</span>';
+  var sl=safeUrl(a.slidesUrl),slides;
+  if(sl){
+    slides='<span class="pill good">Slides attached</span>';
+    if(previewUrl(sl))slides+='<button class="btn small" data-act="preview" data-id="'+esc(a.id)+'">Preview</button>';
+    slides+='<a class="btn small" href="'+esc(sl)+'" target="_blank" rel="noopener noreferrer">Open slides</a>';
+  }else slides='<span class="pill mute">No slides</span>';
+  var when=[];
+  if(a.presenter)when.push('<b>'+esc(a.presenter)+'</b>');
+  if(a.presentedOn&&parseYmd(a.presentedOn))when.push(esc(shortDate(a.presentedOn)));
+  return '<div class="entry"><div><h3>'+title+'</h3>'+(by?'<div class="by">'+esc(by)+'</div>':'')+(a.notes?'<div class="sub">'+esc(a.notes)+'</div>':'')+(tags?'<div class="tags">'+tags+'</div>':'')+'</div>'+
+    '<div class="em">'+(when.length?'<div class="when">Presented by '+when.join(' · ')+'</div>':'')+'<div class="slides">'+slides+'</div></div></div>';
+}
+function renderLibrary(){
+  var box=$('#libList'),cnt=$('#libCount');
+  if(S.mode==='loading'){box.innerHTML='<div class="loading">Loading…</div>';cnt.textContent='';return}
+  var all=articles();
+  var q=($('#lQ').value||'').trim().toLowerCase(),y=$('#lYear').value,p=$('#lPresenter').value,t=$('#lTag').value;
+  var list=all.filter(function(a){return !y||(a.presentedOn||'').slice(0,4)===y})
+    .filter(function(a){return !p||a.presenter===p})
+    .filter(function(a){return !t||(a.tags||[]).indexOf(t)>-1})
+    .filter(function(a){
+      if(!q)return true;
+      return [a.title,a.authors,a.venue,a.year,a.presenter,a.notes,(a.tags||[]).join(' ')].join(' ').toLowerCase().indexOf(q)>-1;
+    })
+    .sort(function(a,b){return (b.presentedOn||'').localeCompare(a.presentedOn||'')});
+  cnt.textContent=list.length===all.length?all.length+(all.length===1?' article':' articles'):list.length+' of '+all.length+' articles';
+  if(!list.length){
+    if(!all.length)box.innerHTML='<div class="empty"><h3>No articles yet</h3><p>The library tab of the sheet has no rows with a title.</p></div>';
+    else box.innerHTML='<div class="empty"><h3>No articles match</h3><p>Try a different search or clear the filters.</p><button class="btn" data-act="reset-lib">Clear filters</button></div>';
+    return;
+  }
+  box.innerHTML='<div class="list">'+list.map(entryRow).join('')+'</div>';
+}
+function renderChrome(){
+  $$('.tab').forEach(function(b){b.setAttribute('aria-selected',String(b.getAttribute('data-tab')===S.tab))});
+  $('#panel-timetable').hidden=S.tab!=='timetable';
+  $('#panel-library').hidden=S.tab!=='library';
+}
+function refreshView(){
+  renderNotice();renderUpdated();renderHero();fillFilters();renderTimetable();renderCalendar();renderLibrary();renderChrome();
+}
+
+/* ---------- slide preview ---------- */
+function openPreview(a){
+  var src=previewUrl(a.slidesUrl);if(!src)return;
+  S.lastFocus=document.activeElement;
+  $('#viewerTitle').textContent=a.title;
+  $('#viewerOpen').href=safeUrl(a.slidesUrl);
+  $('#viewerFrame').src=src;
+  $('#overlay').hidden=false;
+  $('#viewerOpen').focus();
+}
+function closePreview(){
+  $('#overlay').hidden=true;$('#viewerFrame').src='about:blank';
+  if(S.lastFocus&&S.lastFocus.focus)try{S.lastFocus.focus()}catch(e){}
+}
+
+/* ---------- events ---------- */
+document.addEventListener('click',function(e){
+  var el=e.target.closest('[data-act]');if(!el)return;
+  var act=el.getAttribute('data-act');
+  if(act==='tab'){S.tab=el.getAttribute('data-tab');try{localStorage.setItem('rh-tab',S.tab)}catch(x){}renderChrome()}
+  else if(act==='when'){S.when=el.getAttribute('data-when');S.day=null;renderTimetable();renderCalendar()}
+  else if(act==='day'){var d=el.getAttribute('data-day');S.day=S.day===d?null:d;renderTimetable();renderCalendar()}
+  else if(act==='clear-day'){S.day=null;renderTimetable();renderCalendar()}
+  else if(act==='cal-prev'){S.cal=new Date(S.cal.getFullYear(),S.cal.getMonth()-1,1);renderCalendar()}
+  else if(act==='cal-next'){S.cal=new Date(S.cal.getFullYear(),S.cal.getMonth()+1,1);renderCalendar()}
+  else if(act==='reset-filters'){S.when='all';S.day=null;$('#fPresenter').value='';$('#fType').value='';renderTimetable();renderCalendar()}
+  else if(act==='reset-lib'){$('#lQ').value='';$('#lYear').value='';$('#lPresenter').value='';$('#lTag').value='';renderLibrary()}
+  else if(act==='refresh')load();
+  else if(act==='preview'){var id=el.getAttribute('data-id');var a=articles().filter(function(x){return x.id===id})[0];if(a)openPreview(a)}
+  else if(act==='close-viewer')closePreview();
+});
+$('#overlay').addEventListener('click',function(e){if(e.target===this)closePreview()});
+document.addEventListener('keydown',function(e){if(e.key==='Escape'&&!$('#overlay').hidden)closePreview()});
+$('#fPresenter').addEventListener('change',renderTimetable);
+$('#fType').addEventListener('change',renderTimetable);
+['#lYear','#lPresenter','#lTag'].forEach(function(s){$(s).addEventListener('change',renderLibrary)});
+$('#lQ').addEventListener('input',renderLibrary);
+
+/* ---------- loading ---------- */
+async function load(){
+  var cfg=window.CONFIG||{};
+  var tUrl=safeUrl(cfg.timetableCsv),lUrl=safeUrl(cfg.libraryCsv);
+  if(!tUrl&&!lUrl){S.mode='examples';S.err=false;refreshView();return}
+  if(S.busy)return;
+  S.busy=true;renderUpdated();
+  var bad=false;
+  try{
+    var r=await Promise.all([
+      tUrl?fetchCsv(tUrl).then(function(o){return o.map(mapSession)}).catch(function(){bad=true;return null}):Promise.resolve([]),
+      lUrl?fetchCsv(lUrl).then(function(o){return o.map(mapArticle)}).catch(function(){bad=true;return null}):Promise.resolve([])
+    ]);
+    if(r[0])S.sessions=r[0];
+    if(r[1])S.library=r[1];
+    if(S.mode==='loading'&&(!r[0]&&!r[1])){S.sessions=[];S.library=[]}
+    if(r[0]||r[1])S.updatedAt=new Date();
+  }catch(e){bad=true}
+  S.err=bad;S.mode='live';S.busy=false;
+  refreshView();
+}
+refreshView();
+load();
+var mins=Math.max(1,+((window.CONFIG||{}).refreshMinutes)||5);
+setInterval(function(){if(!document.hidden)load()},mins*60000);
+document.addEventListener('visibilitychange',function(){
+  if(!document.hidden&&S.updatedAt&&Date.now()-S.updatedAt.getTime()>2*60000)load();
+});
+})();
+</script>
+</body>
+</html>
